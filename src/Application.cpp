@@ -69,6 +69,7 @@ bool Application::initialize() {
     return false;
   }
 
+  LoadSystemFonts();
   fmt::print(fg(fmt::color::green), "Initialization complete!\n");
   return true;
 }
@@ -136,24 +137,28 @@ void Application::render() {
       }
       ImGui::EndMainMenuBar();
     }
-
+    const float y_offset = FONT_SIZE + 5.f;
     // Left Sidebar
-    ImGui::SetNextWindowPos(ImVec2(0, 20));
-    ImGui::SetNextWindowSize(ImVec2(200, ImGui::GetIO().DisplaySize.y - 20));
+    ImGui::SetNextWindowPos(ImVec2(0, y_offset));
+    ImGui::SetNextWindowSize(
+        ImVec2(200, ImGui::GetIO().DisplaySize.y - y_offset));
+
     if (ImGui::Begin("Left Sidebar", nullptr)) {
       ImGui::Text("Sidebar content");
       ImGui::End();
     }
     // Right Sidebar
-    ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - 200, 20));
-    ImGui::SetNextWindowSize(ImVec2(200, ImGui::GetIO().DisplaySize.y - 20));
+    ImGui::SetNextWindowPos(
+        ImVec2(ImGui::GetIO().DisplaySize.x - 200, y_offset));
+    ImGui::SetNextWindowSize(
+        ImVec2(200, ImGui::GetIO().DisplaySize.y - y_offset));
     if (ImGui::Begin("Right Sidebar", nullptr)) {
       ImGui::Text("Sidebar content");
       ImGui::End();
     }
 
     // Main Center Window
-    ImGui::SetNextWindowPos(ImVec2(200, 20));
+    ImGui::SetNextWindowPos(ImVec2(200, y_offset));
     ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x - 400,
                                     ImGui::GetIO().DisplaySize.y - 60));
     if (ImGui::Begin("Main Center Window", nullptr)) {
@@ -164,15 +169,15 @@ void Application::render() {
       // Plot the sine wave
       if (!values.empty()) {
         ImGui::PlotLines("Sine Wave", values.data(), values.size(), 0, nullptr,
-                         -2.0f, 2.0f, ImVec2(0, 100));
+                         -2.0f, 2.0f, ImVec2(0, 300));
       }
       ImGui::End();
     }
 
     // Bottom Window
-    ImGui::SetNextWindowPos(ImVec2(200, ImGui::GetIO().DisplaySize.y - 40));
-    ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x - 400, 40));
-    if (ImGui::Begin("Bottom Window", nullptr)) {
+    ImGui::SetNextWindowPos(ImVec2(200, ImGui::GetIO().DisplaySize.y - 200));
+    ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x - 400, 200));
+    if (ImGui::Begin("Bottom Window", nullptr, ImGuiWindowFlags_NoDocking)) {
       ImGui::Text("Bottom content");
       ImGui::End();
     }
