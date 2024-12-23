@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en-us">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no" />
+    <title>Sine Wave Simulator</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #2d2d2d;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .emscripten {
+            padding: 0;
+            border: 0;
+            width: 800px;
+            height: 600px;
+            overflow: hidden;
+            display: block;
+            image-rendering: optimizeSpeed;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -o-crisp-edges;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: optimize-contrast;
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
+            -ms-interpolation-mode: nearest-neighbor;
+        }
+
+        .error {
+            font-family: Arial, sans-serif;
+            color: red;
+            text-align: center;
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+    <div id="error-message" class="error"></div>
+    <script type='text/javascript'>
+        var Module = {
+            canvas: (function () { return document.getElementById('canvas'); })(),
+            onAbort: function (what) {
+                var errorDiv = document.getElementById('error-message');
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = 'Error: ' + what;
+                console.error('Aborted:', what);
+            }
+        };
+
+        // Check WebGL support
+        window.addEventListener('load', function () {
+            var canvas = document.getElementById('canvas');
+            var gl = canvas.getContext('webgl2');
+            if (!gl) {
+                var errorDiv = document.getElementById('error-message');
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = 'WebGL2 is not available. Please check that your browser supports WebGL2 and it is enabled.';
+            }
+        });
+    </script>
+    {{{ SCRIPT }}}
+</body>
+
+</html>
