@@ -24,12 +24,13 @@ else()
 endif()
 
 if(EMSCRIPTEN)
-
     # Set Emscripten specific flags
-
     set(EM_FLAGS "\
         -s USE_SDL=2 \
-    ")
+        -s FULL_ES3=1 \
+        -s MIN_WEBGL_VERSION=2 \
+        -s MAX_WEBGL_VERSION=2 \
+    "    )
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EM_FLAGS}")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${EM_FLAGS}")
 
@@ -51,7 +52,7 @@ add_executable(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${SDL2_INCLUDE_DIRS}
-    ${CMAKE_BINARY_DIR}  # For wrapper headers
+    ${CMAKE_BINARY_DIR} # For wrapper headers
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
@@ -69,5 +70,22 @@ if(EMSCRIPTEN)
             ${EM_FLAGS} \
             ${EM_DEBUG_FLAGS} \
             --shell-file ${CMAKE_SOURCE_DIR}/web/shell.html"
+    )
+endif()
+
+find_program(CLANG_FORMAT_EXE NAMES clang-format)
+if(CLANG_FORMAT_EXE)
+    file(GLOB_RECURSE ALL_SOURCE_FILES
+        "${CMAKE_SOURCE_DIR}/src/*.cpp"
+        "${CMAKE_SOURCE_DIR}/src/*.h"
+        "${CMAKE_SOURCE_DIR}/src/*.hpp"
+        "${CMAKE_SOURCE_DIR}/src/*.c"
+        "${CMAKE_SOURCE_DIR}/include/*.h"
+        "${CMAKE_SOURCE_DIR}/include/*.hpp"
+    )
+
+    add_custom_target(clang_format
+        COMMAND ${CLANG_FORMAT_EXE} -i -style=file ${ALL_SOURCE_FILES}
+        COMMENT "Running clang-format on specified source files"
     )
 endif()

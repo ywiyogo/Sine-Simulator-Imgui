@@ -3,3 +3,5 @@ build/
 .idea/
 *.o
 *.out
+
+imgui.ini

@@ -4,8 +4,8 @@ include(FetchContent)
 FetchContent_Declare(
     imgui
     GIT_REPOSITORY https://github.com/ocornut/imgui.git
-    GIT_TAG        v1.91.6   # Specify a version tag for stability
-    GIT_SHALLOW    TRUE      # Only fetch the specified commit
+    GIT_TAG docking # Specify a version tag for stability
+    GIT_SHALLOW TRUE # Only fetch the specified commit
 )
 
 # Make ImGui available
@@ -14,28 +14,28 @@ FetchContent_MakeAvailable(imgui)
 # Generate a custom header for SDL include
 if(EMSCRIPTEN)
     file(WRITE ${CMAKE_BINARY_DIR}/imgui_sdl_include.h
-    "#include <SDL.h>
-#include \"imgui.h\"
-    ")
+        "#include <SDL.h>
+        #include \"imgui.h\"
+    "    )
 else()
     file(WRITE ${CMAKE_BINARY_DIR}/imgui_sdl_include.h
-    "#include <SDL2/SDL.h>
-#include \"imgui.h\"
-    ")
+        "#include <SDL2/SDL.h>
+        #include \"imgui.h\"
+    "    )
 endif()
 
 # Create wrapper for SDL2 backend
 file(WRITE ${CMAKE_BINARY_DIR}/imgui_impl_sdl2_wrapper.h
-"${SDL_INCLUDE}
-#include \"imgui.h\"
-#include \"${imgui_SOURCE_DIR}/backends/imgui_impl_sdl2.h\"
+    "${SDL_INCLUDE}
+    #include \"imgui.h\"
+    #include \"${imgui_SOURCE_DIR}/backends/imgui_impl_sdl2.h\"
 ")
 
 # Create wrapper for SDL2 Renderer backend
 file(WRITE ${CMAKE_BINARY_DIR}/imgui_impl_sdlrenderer2_wrapper.h
-"${SDL_INCLUDE}
-#include \"imgui.h\"
-#include \"${imgui_SOURCE_DIR}/backends/imgui_impl_sdlrenderer2.h\"
+    "${SDL_INCLUDE}
+    #include \"imgui.h\"
+    #include \"${imgui_SOURCE_DIR}/backends/imgui_impl_sdlrenderer2.h\"
 ")
 
 # Create ImGui library with our specific requirements
@@ -64,7 +64,7 @@ target_include_directories(imgui_sdl_backends PUBLIC
     ${imgui_SOURCE_DIR}
     ${imgui_SOURCE_DIR}/backends
     ${SDL2_INCLUDE_DIRS}
-    ${CMAKE_BINARY_DIR}  # For wrapper headers
+    ${CMAKE_BINARY_DIR} # For wrapper headers
 )
 
 target_link_libraries(imgui_sdl_backends PUBLIC

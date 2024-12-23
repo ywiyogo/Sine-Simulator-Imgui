@@ -5,7 +5,6 @@
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #include <emscripten/html5.h>
-#define FMT_CONSTEVAL
 #endif
 // avoid using FMT_STRING macros from fmt/format.h and fmt::println
 #include <fmt/color.h>
@@ -24,13 +23,11 @@ Application::Application()
 Application::~Application() { cleanup(); }
 
 bool Application::initialize() {
-  fmt::print("Initializing SDL...\n");
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-    fmt::print("SDL initialization failed: {}\n", SDL_GetError());
+    fmt::print("SDL initialization failed: {}", SDL_GetError());
     return false;
   }
 
-  fmt::print("Creating window...\n");
   window = SDL_CreateWindow("Sine Wave Simulator", SDL_WINDOWPOS_CENTERED,
                             SDL_WINDOWPOS_CENTERED, 800, 600,
                             SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
@@ -58,6 +55,9 @@ bool Application::initialize() {
   fmt::print("Initializing ImGui...\n");
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
+
+  ImGuiIO& io = ImGui::GetIO();
+  io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
   if (!ImGui_ImplSDL2_InitForSDLRenderer(window, renderer)) {
     fmt::print("ImGui SDL2 initialization failed\n");
@@ -106,16 +106,80 @@ void Application::render() {
   ImGui::NewFrame();
 
   try {
-    // Create ImGui window
-    ImGui::Begin("Sine Wave Controls");
-    ImGui::SliderFloat("Frequency", &frequency, 0.1f, 5.0f);
-    ImGui::SliderFloat("Amplitude", &amplitude, 0.1f, 2.0f);
-
-    // Plot the sine wave
-    if (!values.empty()) {
-      ImGui::PlotLines("Sine Wave", values.data(), values.size(), 0, nullptr,
-                       -2.0f, 2.0f, ImVec2(0, 100));
+    // Create main menu bar
+    if (ImGui::BeginMainMenuBar()) {
+      if (ImGui::BeginMenu("File")) {
+        if (ImGui::MenuItem("New", "Ctrl+N")) {
+        }
+        if (ImGui::MenuItem("Open", "Ctrl+O")) {
+        }
+        if (ImGui::MenuItem("Save", "Ctrl+S")) {
+        }
+        ImGui::Separator();
+        if (ImGui::MenuItem("Exit", "Alt+F4")) {
+          running = false;
+        }
+        ImGui::EndMenu();
+      }
+      if (ImGui::BeginMenu("Edit")) {
+        if (ImGui::MenuItem("Undo", "Ctrl+Z")) {
+        }
+        if (ImGui::MenuItem("Redo", "Ctrl+Y")) {
+        }
+        ImGui::EndMenu();
+      }
+      if (ImGui::BeginMenu("View")) {
+        ImGui::MenuItem("Left Sidebar", nullptr, &showLeftSidebar);
+        ImGui::MenuItem("Right Sidebar", nullptr, &showRightSidebar);
+        ImGui::MenuItem("Bottom Panel", nullptr, &showBottomPanel);
+        ImGui::EndMenu();
+      }
+      ImGui::EndMainMenuBar();
     }
+
+    // Left Sidebar
+    ImGui::SetNextWindowPos(ImVec2(0, 20));
+    ImGui::SetNextWindowSize(ImVec2(200, ImGui::GetIO().DisplaySize.y - 20));
+    if (ImGui::Begin("Left Sidebar", nullptr)) {
+      ImGui::Text("Sidebar content");
+      ImGui::End();
+    }
+    // Right Sidebar
+    ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - 200, 20));
+    ImGui::SetNextWindowSize(ImVec2(200, ImGui::GetIO().DisplaySize.y - 20));
+    if (ImGui::Begin("Right Sidebar", nullptr)) {
+      ImGui::Text("Sidebar content");
+      ImGui::End();
+    }
+
+    // Main Center Window
+    ImGui::SetNextWindowPos(ImVec2(200, 20));
+    ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x - 400,
+                                    ImGui::GetIO().DisplaySize.y - 60));
+    if (ImGui::Begin("Main Center Window", nullptr)) {
+      ImGui::Text("Main content goes here");
+      ImGui::SliderFloat("Frequency", &frequency, 0.1f, 5.0f);
+      ImGui::SliderFloat("Amplitude", &amplitude, 0.1f, 2.0f);
+
+      // Plot the sine wave
+      if (!values.empty()) {
+        ImGui::PlotLines("Sine Wave", values.data(), values.size(), 0, nullptr,
+                         -2.0f, 2.0f, ImVec2(0, 100));
+      }
+      ImGui::End();
+    }
+
+    // Bottom Window
+    ImGui::SetNextWindowPos(ImVec2(200, ImGui::GetIO().DisplaySize.y - 40));
+    ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x - 400, 40));
+    if (ImGui::Begin("Bottom Window", nullptr)) {
+      ImGui::Text("Bottom content");
+      ImGui::End();
+    }
+
+    // Create ImGui window
+    ImGui::Begin("New window");
+
     ImGui::End();
   } catch (const std::exception& e) {
     fmt::print("ImGui rendering error: {}\n", e.what());
