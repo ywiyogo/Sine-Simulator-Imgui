@@ -13,7 +13,7 @@ if(EMSCRIPTEN)
         fmt
         GIT_REPOSITORY https://github.com/fmtlib/fmt.git
         GIT_TAG 9.1.0 # Using an older version known to work with Emscripten
-    )
+)
     FetchContent_MakeAvailable(fmt)
 
     set(FMT_LIBRARIES fmt::fmt)
@@ -30,7 +30,7 @@ if(EMSCRIPTEN)
         -s FULL_ES3=1 \
         -s MIN_WEBGL_VERSION=2 \
         -s MAX_WEBGL_VERSION=2 \
-    "    )
+    ")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EM_FLAGS}")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${EM_FLAGS}")
 
@@ -52,6 +52,8 @@ add_executable(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${SDL2_INCLUDE_DIRS}
+    ${imgui_SOURCE_DIR}
+    ${imgui_BINARY_DIR}
     ${CMAKE_BINARY_DIR} # For wrapper headers
 )
 
@@ -70,7 +72,7 @@ if(EMSCRIPTEN)
             ${EM_FLAGS} \
             ${EM_DEBUG_FLAGS} \
             --shell-file ${CMAKE_SOURCE_DIR}/web/shell.html"
-    )
+)
 endif()
 
 find_program(CLANG_FORMAT_EXE NAMES clang-format)
@@ -82,10 +84,10 @@ if(CLANG_FORMAT_EXE)
         "${CMAKE_SOURCE_DIR}/src/*.c"
         "${CMAKE_SOURCE_DIR}/include/*.h"
         "${CMAKE_SOURCE_DIR}/include/*.hpp"
-    )
+)
 
     add_custom_target(clang_format
         COMMAND ${CLANG_FORMAT_EXE} -i -style=file ${ALL_SOURCE_FILES}
         COMMENT "Running clang-format on specified source files"
-    )
+)
 endif()

@@ -2,6 +2,9 @@
 
 #include <cmath>
 
+#include "imgui.h"
+#include "imgui_internal.h"
+
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #include <emscripten/html5.h>
@@ -9,6 +12,8 @@
 // avoid using FMT_STRING macros from fmt/format.h and fmt::println
 #include <fmt/color.h>
 #include <fmt/core.h>
+
+#include "Style.hpp"
 
 Application::Application()
     : window(nullptr),
@@ -70,6 +75,7 @@ bool Application::initialize() {
   }
 
   LoadSystemFonts();
+  ImGui::SetupImGuiStyle(false);
   fmt::print(fg(fmt::color::green), "Initialization complete!\n");
   return true;
 }
@@ -137,55 +143,124 @@ void Application::render() {
       }
       ImGui::EndMainMenuBar();
     }
-    const float y_offset = FONT_SIZE + 5.f;
+
+    // Retrieve the display size
+    ImGuiIO& io = ImGui::GetIO();
+    ImVec2 displaySize = io.DisplaySize;
+    float ymargin = 30.f;
+    // Static variables for resizable areas
+    static float leftSidebarWidth =
+        0.2f * displaySize.x;  // 20% of the window width
+    static float rightSidebarWidth =
+        0.2f * displaySize.x;  // 20% of the window width
+    static float bottomBarHeight =
+        0.25f * displaySize.y;  // 20% of the window height
+
+    // Constraints for minimum sizes
+    const float minWidth = 100.0f;    // Minimum width for sidebars
+    const float minHeight = 100.0f;   // Minimum height for the bottom bar
+    const float splitterSize = 6.0f;  // Thickness of the splitter
+
+    // Dynamically calculate remaining sizes
+    float centerWidth =
+        displaySize.x - leftSidebarWidth - rightSidebarWidth - 2 * splitterSize;
+    float mainAreaHeight =
+        displaySize.y - bottomBarHeight - splitterSize - ymargin;
+
+    // Set up the fullscreen container
+    ImGui::SetNextWindowPos(ImVec2(0, ymargin));
+    ImGui::SetNextWindowSize(displaySize);
+    ImGuiWindowFlags containerFlags =
+        ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
+        ImGuiWindowFlags_NoBringToFrontOnFocus;
+    ImGui::Begin("FullscreenContainer", nullptr, containerFlags);
+
+    // Main Area (Top Section)
+    ImGui::BeginChild("MainArea", ImVec2(displaySize.x, mainAreaHeight), false);
+
     // Left Sidebar
-    ImGui::SetNextWindowPos(ImVec2(0, y_offset));
-    ImGui::SetNextWindowSize(
-        ImVec2(200, ImGui::GetIO().DisplaySize.y - y_offset));
+    ImGui::BeginChild("LeftSidebar", ImVec2(leftSidebarWidth, mainAreaHeight),
+                      true);
+    ImGui::Text("Left Sidebar");
+    ImGui::Button("Option 1");
+    ImGui::Button("Option 2");
+    ImGui::EndChild();
 
-    if (ImGui::Begin("Left Sidebar", nullptr)) {
-      ImGui::Text("Sidebar content");
-      ImGui::End();
+    // Splitter for Left Sidebar and Center
+    ImGui::SameLine();
+    ImGui::PushStyleColor(ImGuiCol_Button,
+                          IM_COL32(190, 190, 190, 255));  // Darker color
+    ImGui::Button("LeftSplitter", ImVec2(splitterSize, mainAreaHeight));
+    ImGui::PopStyleColor(1);  // Pop the custom button styles
+    if (ImGui::IsItemActive()) {
+      leftSidebarWidth += io.MouseDelta.x;
+      leftSidebarWidth = ImClamp(
+          leftSidebarWidth, minWidth,
+          displaySize.x - rightSidebarWidth - centerWidth - splitterSize);
     }
+
+    // Center Main Window
+    ImGui::SameLine();
+    ImGui::BeginChild("CenterMain", ImVec2(centerWidth, mainAreaHeight), true);
+    ImGui::Text("Center Main Window");
+    ImGui::Button("Main Button");
+    ImGui::SliderFloat("Frequency", &frequency, 0.1f, 5.0f);
+    ImGui::SliderFloat("Amplitude", &amplitude, 0.1f, 2.0f);
+
+    // Plot the sine wave
+    if (!values.empty()) {
+      ImGui::PlotLines("Sine Wave", values.data(), values.size(), 0, nullptr,
+                       -2.0f, 2.0f, ImVec2(0, 300));
+    }
+    ImGui::EndChild();
+
+    // Splitter for Center and Right Sidebar
+    ImGui::SameLine();
+    ImGui::PushStyleColor(ImGuiCol_Button,
+                          IM_COL32(190, 190, 190, 255));  // Darker color
+    ImGui::Button("RightSplitter", ImVec2(splitterSize, mainAreaHeight));
+    ImGui::PopStyleColor(1);  // Pop the custom button styles
+    if (ImGui::IsItemActive()) {
+      rightSidebarWidth -= io.MouseDelta.x;
+      rightSidebarWidth = ImClamp(
+          rightSidebarWidth, minWidth,
+          displaySize.x - leftSidebarWidth - centerWidth - splitterSize);
+    }
+
     // Right Sidebar
-    ImGui::SetNextWindowPos(
-        ImVec2(ImGui::GetIO().DisplaySize.x - 200, y_offset));
-    ImGui::SetNextWindowSize(
-        ImVec2(200, ImGui::GetIO().DisplaySize.y - y_offset));
-    if (ImGui::Begin("Right Sidebar", nullptr)) {
-      ImGui::Text("Sidebar content");
-      ImGui::End();
+    ImGui::SameLine();
+    ImGui::BeginChild("RightSidebar", ImVec2(rightSidebarWidth, mainAreaHeight),
+                      true);
+    ImGui::Text("Right Sidebar");
+    ImGui::Button("Setting 1");
+    ImGui::Button("Setting 2");
+    ImGui::EndChild();
+
+    ImGui::EndChild();  // End of MainArea
+
+    // Splitter for Main Area and Bottom Bar
+
+    ImGui::PushStyleColor(ImGuiCol_Button,
+                          IM_COL32(190, 190, 190, 255));  // Darker color
+    ImGui::Button("BottomSplitter", ImVec2(displaySize.x, splitterSize));
+    ImGui::PopStyleColor(1);  // Pop the custom button styles
+    if (ImGui::IsItemActive()) {
+      bottomBarHeight -= io.MouseDelta.y;
+      bottomBarHeight =
+          ImClamp(bottomBarHeight, minHeight, displaySize.y * 0.5f);
     }
 
-    // Main Center Window
-    ImGui::SetNextWindowPos(ImVec2(200, y_offset));
-    ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x - 400,
-                                    ImGui::GetIO().DisplaySize.y - 60));
-    if (ImGui::Begin("Main Center Window", nullptr)) {
-      ImGui::Text("Main content goes here");
-      ImGui::SliderFloat("Frequency", &frequency, 0.1f, 5.0f);
-      ImGui::SliderFloat("Amplitude", &amplitude, 0.1f, 2.0f);
+    // Bottom Bar
+    ImGui::BeginChild("BottomBar", ImVec2(displaySize.x, bottomBarHeight),
+                      true);
+    ImGui::Text("Bottom Bar");
+    ImGui::Button("Action 1");
+    ImGui::Button("Action 2");
+    ImGui::EndChild();
 
-      // Plot the sine wave
-      if (!values.empty()) {
-        ImGui::PlotLines("Sine Wave", values.data(), values.size(), 0, nullptr,
-                         -2.0f, 2.0f, ImVec2(0, 300));
-      }
-      ImGui::End();
-    }
+    ImGui::End();  // End of FullscreenContainer
 
-    // Bottom Window
-    ImGui::SetNextWindowPos(ImVec2(200, ImGui::GetIO().DisplaySize.y - 200));
-    ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x - 400, 200));
-    if (ImGui::Begin("Bottom Window", nullptr, ImGuiWindowFlags_NoDocking)) {
-      ImGui::Text("Bottom content");
-      ImGui::End();
-    }
-
-    // Create ImGui window
-    ImGui::Begin("New window");
-
-    ImGui::End();
   } catch (const std::exception& e) {
     fmt::print("ImGui rendering error: {}\n", e.what());
   }
