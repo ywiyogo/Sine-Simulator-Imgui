@@ -1,4 +1,4 @@
-#include "Application.hpp"
+#include "Gui.hpp"
 
 #include <cmath>
 
@@ -15,19 +15,16 @@
 
 #include "Style.hpp"
 
-Application::Application()
+Gui::Gui(CoreLogic& coreLogic)
     : window(nullptr),
       renderer(nullptr),
       running(true),
-      frequency(1.0f),
-      amplitude(1.0f),
-      time(0.0f) {
-  values.reserve(MAX_VALUES);
-}
+      paused(false),
+      core_logic_(coreLogic) {}
 
-Application::~Application() { cleanup(); }
+Gui::~Gui() { Cleanup(); }
 
-bool Application::initialize() {
+bool Gui::Initialize() {
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
     fmt::print("SDL initialization failed: {}", SDL_GetError());
     return false;
@@ -80,7 +77,7 @@ bool Application::initialize() {
   return true;
 }
 
-void Application::processEvents() {
+void Gui::ProcessEvents() {
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
     ImGui_ImplSDL2_ProcessEvent(&event);
@@ -90,17 +87,9 @@ void Application::processEvents() {
   }
 }
 
-void Application::update() {
-  time += 0.016f;  // Assuming ~60 FPS
-  float value = amplitude * std::sin(2.0f * M_PI * frequency * time);
+void Gui::Update() {}
 
-  values.push_back(value);
-  if (values.size() > MAX_VALUES) {
-    values.erase(values.begin());
-  }
-}
-
-void Application::render() {
+void Gui::Render() {
   SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
   if (SDL_RenderClear(renderer) != 0) {
     fmt::print("Render clear failed: {}\n", SDL_GetError());
@@ -113,6 +102,7 @@ void Application::render() {
   ImGui::NewFrame();
 
   try {
+#ifndef __EMSCRIPTEN__
     // Create main menu bar
     if (ImGui::BeginMainMenuBar()) {
       if (ImGui::BeginMenu("File")) {
@@ -143,18 +133,20 @@ void Application::render() {
       }
       ImGui::EndMainMenuBar();
     }
-
+#endif
     // Retrieve the display size
     ImGuiIO& io = ImGui::GetIO();
     ImVec2 displaySize = io.DisplaySize;
     float ymargin = 30.f;
+    float xmargin = 10.f;
+    float container_width = displaySize.x - xmargin;
+    float container_height = displaySize.y - ymargin;
     // Static variables for resizable areas
-    static float leftSidebarWidth =
-        0.2f * displaySize.x;  // 20% of the window width
-    static float rightSidebarWidth =
-        0.2f * displaySize.x;  // 20% of the window width
-    static float bottomBarHeight =
-        0.25f * displaySize.y;  // 20% of the window height
+    // 20% of the window width for left and right sidebar
+    static float leftSidebarWidth = 0.2f * container_width;
+    static float rightSidebarWidth = 0.2f * container_width;
+    // 25% of the window height
+    static float bottomBarHeight = 0.25f * container_height;
 
     // Constraints for minimum sizes
     const float minWidth = 100.0f;    // Minimum width for sidebars
@@ -162,13 +154,17 @@ void Application::render() {
     const float splitterSize = 6.0f;  // Thickness of the splitter
 
     // Dynamically calculate remaining sizes
-    float centerWidth =
-        displaySize.x - leftSidebarWidth - rightSidebarWidth - 2 * splitterSize;
+    float centerWidth = container_width - leftSidebarWidth - rightSidebarWidth -
+                        2 * splitterSize;
     float mainAreaHeight =
         displaySize.y - bottomBarHeight - splitterSize - ymargin;
 
-    // Set up the fullscreen container
+// Set up the fullscreen container
+#ifdef __EMSCRIPTEN__
+    ImGui::SetNextWindowPos(ImVec2(0, 0));
+#else
     ImGui::SetNextWindowPos(ImVec2(0, ymargin));
+#endif
     ImGui::SetNextWindowSize(displaySize);
     ImGuiWindowFlags containerFlags =
         ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
@@ -177,7 +173,8 @@ void Application::render() {
     ImGui::Begin("FullscreenContainer", nullptr, containerFlags);
 
     // Main Area (Top Section)
-    ImGui::BeginChild("MainArea", ImVec2(displaySize.x, mainAreaHeight), false);
+    ImGui::BeginChild("MainArea", ImVec2(container_width, mainAreaHeight),
+                      false);
 
     // Left Sidebar
     ImGui::BeginChild("LeftSidebar", ImVec2(leftSidebarWidth, mainAreaHeight),
@@ -197,21 +194,25 @@ void Application::render() {
       leftSidebarWidth += io.MouseDelta.x;
       leftSidebarWidth = ImClamp(
           leftSidebarWidth, minWidth,
-          displaySize.x - rightSidebarWidth - centerWidth - splitterSize);
+          container_width - rightSidebarWidth - centerWidth - splitterSize);
     }
 
     // Center Main Window
     ImGui::SameLine();
     ImGui::BeginChild("CenterMain", ImVec2(centerWidth, mainAreaHeight), true);
     ImGui::Text("Center Main Window");
-    ImGui::Button("Main Button");
-    ImGui::SliderFloat("Frequency", &frequency, 0.1f, 5.0f);
-    ImGui::SliderFloat("Amplitude", &amplitude, 0.1f, 2.0f);
+    if (ImGui::Button(IsPaused() ? "Resume" : "Pause")) {
+      TogglePause();
+    }
+    ImGui::SliderFloat("Frequency", &core_logic_.GetFrequency(), 0.1f, 10.0f);
+    ImGui::SliderFloat("Amplitude", &core_logic_.GetAmplitude(), 0.1f, 10.0f);
+    ImGui::SliderFloat("Frame per Seconds", &core_logic_.GetFps(), 5.f, 120.0f);
 
     // Plot the sine wave
-    if (!values.empty()) {
-      ImGui::PlotLines("Sine Wave", values.data(), values.size(), 0, nullptr,
-                       -2.0f, 2.0f, ImVec2(0, 300));
+    if (!core_logic_.GetSineWaveValues().empty()) {
+      ImGui::PlotLines("Sine Wave", core_logic_.GetSineWaveValues().data(),
+                       core_logic_.GetSineWaveValues().size(), 0, nullptr,
+                       -10.0f, 10.0f, ImVec2(0, 300));
     }
     ImGui::EndChild();
 
@@ -225,7 +226,7 @@ void Application::render() {
       rightSidebarWidth -= io.MouseDelta.x;
       rightSidebarWidth = ImClamp(
           rightSidebarWidth, minWidth,
-          displaySize.x - leftSidebarWidth - centerWidth - splitterSize);
+          container_width - leftSidebarWidth - centerWidth - splitterSize);
     }
 
     // Right Sidebar
@@ -243,7 +244,7 @@ void Application::render() {
 
     ImGui::PushStyleColor(ImGuiCol_Button,
                           IM_COL32(190, 190, 190, 255));  // Darker color
-    ImGui::Button("BottomSplitter", ImVec2(displaySize.x, splitterSize));
+    ImGui::Button("BottomSplitter", ImVec2(container_width, splitterSize));
     ImGui::PopStyleColor(1);  // Pop the custom button styles
     if (ImGui::IsItemActive()) {
       bottomBarHeight -= io.MouseDelta.y;
@@ -252,7 +253,7 @@ void Application::render() {
     }
 
     // Bottom Bar
-    ImGui::BeginChild("BottomBar", ImVec2(displaySize.x, bottomBarHeight),
+    ImGui::BeginChild("BottomBar", ImVec2(container_width, bottomBarHeight),
                       true);
     ImGui::Text("Bottom Bar");
     ImGui::Button("Action 1");
@@ -272,28 +273,13 @@ void Application::render() {
   SDL_RenderPresent(renderer);
 }
 
-#ifdef __EMSCRIPTEN__
-void emscripten_loop(void* arg) {
-  Application* app = static_cast<Application*>(arg);
-  app->processEvents();
-  app->update();
-  app->render();
-}
-#endif
-
-void Application::run() {
-#ifdef __EMSCRIPTEN__
-  emscripten_set_main_loop_arg(emscripten_loop, this, 0, true);
-#else
-  while (running) {
-    processEvents();
-    update();
-    render();
-  }
-#endif
+void Gui::Run() {
+  ProcessEvents();
+  Update();
+  Render();
 }
 
-void Application::cleanup() {
+void Gui::Cleanup() {
   fmt::print("Starting cleanup...\n");
 
   ImGui_ImplSDLRenderer2_Shutdown();

@@ -41,27 +41,23 @@ else()
     find_package(SDL2 REQUIRED)
 endif()
 
+add_subdirectory(src/core)
+add_subdirectory(src/ui)
+
 # Add external dependencies (including ImGui)
 add_subdirectory(external)
 
 # Main executable
 add_executable(${PROJECT_NAME}
     src/main.cpp
-    src/Application.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-    ${SDL2_INCLUDE_DIRS}
-    ${imgui_SOURCE_DIR}
-    ${imgui_BINARY_DIR}
-    ${CMAKE_BINARY_DIR} # For wrapper headers
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-    ${SDL2_LIBRARIES}
-    imgui
-    imgui_sdl_backends
-    ${FMT_LIBRARIES}
+    core_logic
+    gui
 )
 
 # Web build specific settings
@@ -71,6 +67,7 @@ if(EMSCRIPTEN)
         LINK_FLAGS "\
             ${EM_FLAGS} \
             ${EM_DEBUG_FLAGS} \
+            --preload-file ${CMAKE_SOURCE_DIR}/web/fonts/NotoSans-Regular.ttf@/fonts/NotoSans-Regular.ttf \
             --shell-file ${CMAKE_SOURCE_DIR}/web/shell.html"
 )
 endif()
