@@ -31,7 +31,7 @@ bool Gui::Initialize() {
   }
 
   window = SDL_CreateWindow("Sine Wave Simulator", SDL_WINDOWPOS_CENTERED,
-                            SDL_WINDOWPOS_CENTERED, 800, 600,
+                            SDL_WINDOWPOS_CENTERED, 1920, 1080,
                             SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 
   if (!window) {
@@ -143,10 +143,10 @@ void Gui::Render() {
     float container_height = displaySize.y - ymargin;
     // Static variables for resizable areas
     // 20% of the window width for left and right sidebar
-    static float leftSidebarWidth = 0.2f * container_width;
+    static float leftSidebarWidth = 0.15f * container_width;
     static float rightSidebarWidth = 0.2f * container_width;
     // 25% of the window height
-    static float bottomBarHeight = 0.25f * container_height;
+    static float bottomBarHeight = 0.20f * container_height;
 
     // Constraints for minimum sizes
     const float minWidth = 100.0f;    // Minimum width for sidebars
@@ -180,8 +180,15 @@ void Gui::Render() {
     ImGui::BeginChild("LeftSidebar", ImVec2(leftSidebarWidth, mainAreaHeight),
                       true);
     ImGui::Text("Left Sidebar");
-    ImGui::Button("Option 1");
-    ImGui::Button("Option 2");
+    float buttonWidth = ImGui::GetContentRegionAvail().x - 30;
+    float windowWidth = ImGui::GetWindowWidth();
+    ImGui::SetCursorPosX((windowWidth - buttonWidth) * 0.5f);
+    ImGui::Button("Plotting", ImVec2(buttonWidth, 0));
+    // Add vertical spacing
+    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
+
+    ImGui::SetCursorPosX((windowWidth - buttonWidth) * 0.5f);
+    ImGui::Button("Simulation", ImVec2(buttonWidth, 0));
     ImGui::EndChild();
 
     // Splitter for Left Sidebar and Center
@@ -204,16 +211,31 @@ void Gui::Render() {
     if (ImGui::Button(IsPaused() ? "Resume" : "Pause")) {
       TogglePause();
     }
-    ImGui::SliderFloat("Frequency", &core_logic_.GetFrequency(), 0.1f, 10.0f);
-    ImGui::SliderFloat("Amplitude", &core_logic_.GetAmplitude(), 0.1f, 10.0f);
-    ImGui::SliderFloat("Frame per Seconds", &core_logic_.GetFps(), 5.f, 120.0f);
+    ImGui::Columns(2);
+    ImGui::Text("Frequency");
+    ImGui::NextColumn();
+    ImGui::SliderFloat("##Frequency", &core_logic_.GetFrequency(), 0.1f,
+                       100.0f);
+    ImGui::NextColumn();
+    ImGui::Text("Amplitude");
+    ImGui::NextColumn();
+    ImGui::SliderFloat("##Amplitude", &core_logic_.GetAmplitude(), 0.1f, 10.0f);
+    ImGui::NextColumn();
+    ImGui::Text("Frame per Seconds");
+    ImGui::NextColumn();
+    ImGui::SliderFloat("##Frame per Seconds", &core_logic_.GetFps(), 5.f,
+                       600.0f);
 
+    ImGui::Columns(1);
     // Plot the sine wave
     if (!core_logic_.GetSineWaveValues().empty()) {
-      ImGui::PlotLines("Sine Wave", core_logic_.GetSineWaveValues().data(),
+      float windowWidth = ImGui::GetContentRegionAvail().x - 20;
+      // use -1 or windowWidth
+      ImGui::PlotLines("##Sine Wave", core_logic_.GetSineWaveValues().data(),
                        core_logic_.GetSineWaveValues().size(), 0, nullptr,
-                       -10.0f, 10.0f, ImVec2(0, 300));
+                       -10.0f, 10.0f, ImVec2(-1, 300));
     }
+
     ImGui::EndChild();
 
     // Splitter for Center and Right Sidebar
@@ -257,6 +279,7 @@ void Gui::Render() {
                       true);
     ImGui::Text("Bottom Bar");
     ImGui::Button("Action 1");
+    ImGui::SameLine();
     ImGui::Button("Action 2");
     ImGui::EndChild();
 
