@@ -2,10 +2,17 @@
 
 Simple example to create a desktop GUI and web app using C++, ImGui, and SDL2.
 
-https://github.com/ywiyogo/Sine-Simulator-Imgui/tree/master/docs/desktop.mp4
+<p align="center">
+  <img src="docs/desktop.gif" width="800" alt="Desktop app preview">
+  <br>
+  <em>Preview of desktop app</em>
+</p>
 
-![Web app Preview](docs/webapp.mp4)
-https://github.com/ywiyogo/Sine-Simulator-Imgui/tree/master/docs/webapp.mp4
+<p align="center">
+  <img src="docs/webapp.gif" width="800" alt="Web app preview on a browser">
+  <br>
+  <em>Preview of web app</em>
+</p>
 
 ## Getting Started 
 
