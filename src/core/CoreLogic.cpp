@@ -1,8 +1,12 @@
 #include "CoreLogic.hpp"
 
+#include <fmt/base.h>
 #include <fmt/core.h>
 
-CoreLogic::CoreLogic() { sine_wave_values_.reserve(MAX_VALUES); }
+CoreLogic::CoreLogic() {
+  sine_wave_values_.clear();
+  time_ = 0.f;
+}
 
 void CoreLogic::Update() {
   // Assuming ~60 FPS or 1/60 of a sec

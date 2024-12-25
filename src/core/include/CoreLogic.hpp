@@ -15,12 +15,12 @@ class CoreLogic {
   float& GetFps() { return fps_; };
 
   // Getter for sine wave values
-  const std::vector<float>& GetSineWaveValues() const {
+  inline const std::vector<float> GetSineWaveValues() const {
     return sine_wave_values_;
   };
 
  private:
-  static constexpr size_t MAX_VALUES = 100;
+  static constexpr size_t MAX_VALUES = 500;
   // Simulation parameters
   float frequency_ = 1.f;
   float amplitude_ = 1.f;
