@@ -2,15 +2,10 @@
 
 Simple example to create a desktop GUI and web app using C++, ImGui, and SDL2.
 
-<video width="640" height="480" controls>
-  <source src="docs/desktop.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+https://github.com/ywiyogo/Sine-Simulator-Imgui/tree/master/docs/desktop.mp4
 
-<video width="640" height="480" controls>
-  <source src="docs/webapp.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+![Web app Preview](docs/webapp.mp4)
+https://github.com/ywiyogo/Sine-Simulator-Imgui/tree/master/docs/webapp.mp4
 
 ## Getting Started 
 
