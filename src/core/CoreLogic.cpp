@@ -1,6 +1,5 @@
 #include "CoreLogic.hpp"
 
-#include <fmt/base.h>
 #include <fmt/core.h>
 
 CoreLogic::CoreLogic() {
