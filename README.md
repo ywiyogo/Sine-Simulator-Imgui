@@ -1,6 +1,8 @@
-# Sine Simulator with ImGui and SDL2
+# Wave Simulator with ImGui and SDL2
 
-Simple example to create a desktop GUI and web app using C++, ImGui, and SDL2.
+Simple example to create a beautiful desktop GUI and web app using C++, ImGui, and SDL2.
+
+![Pro Design Desktop App preview](https://github.com/ywiyogo/Sine-Simulator-Imgui/raw/refs/heads/master/docs/pro_desktop.mp4)
 
 <p align="center">
   <img src="docs/desktop.gif" width="800" alt="Desktop app preview">
@@ -14,7 +16,7 @@ Simple example to create a desktop GUI and web app using C++, ImGui, and SDL2.
   <em>Preview of web app</em>
 </p>
 
-## Getting Started 
+## Getting Started
 
 ### Arch Linux
 

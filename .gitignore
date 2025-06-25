@@ -4,4 +4,7 @@ build/
 *.o
 *.out
 .cache/
+
+config/
+
 imgui.ini
