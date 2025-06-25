@@ -1,4 +1,4 @@
-# Module "path_planner"
+# Module "ui"
 
 add_library(gui OBJECT
     Gui.cpp
@@ -12,6 +12,12 @@ target_include_directories(gui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
 target_compile_features(gui PUBLIC cxx_std_20)
+
+# Add compiler warning flags
+target_compile_options(gui PRIVATE
+    $<$<COMPILE_LANGUAGE:CXX>:-Wall>
+    $<$<COMPILE_LANGUAGE:CXX>:-Wextra>
+)
 
 target_link_libraries(gui
     fmt::fmt

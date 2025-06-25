@@ -60,6 +60,12 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     gui
 )
 
+# Add compiler warning flags (most modern target-specific approach)
+target_compile_options(${PROJECT_NAME} PRIVATE
+    $<$<COMPILE_LANGUAGE:CXX>:-Wall>
+    $<$<COMPILE_LANGUAGE:CXX>:-Wextra>
+)
+
 # Web build specific settings
 if(EMSCRIPTEN)
     set_target_properties(${PROJECT_NAME} PROPERTIES
