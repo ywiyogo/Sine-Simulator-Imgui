@@ -2,7 +2,12 @@
 
 Simple example to create a beautiful desktop GUI and web app using C++, ImGui, and SDL2.
 
-![Pro Design Desktop App preview](https://github.com/ywiyogo/Sine-Simulator-Imgui/raw/refs/heads/master/docs/pro_desktop.mp4)
+<div align="center">
+  <video controls>
+    <source src="./docs/pro_desktop.mp4" type="video/mp4">
+    <p>ImGUI Pro Design <a href="./docs/pro_desktop.mp4"></p>
+  </video>
+</div>
 
 <p align="center">
   <img src="docs/desktop.gif" width="800" alt="Desktop app preview">
